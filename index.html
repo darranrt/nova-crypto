@@ -1,0 +1,2529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NovaCrypto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Makes it behave more like an app when added to Home Screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="NovaCrypto">
+
+  <style>
+    :root {
+      --bg: #060712;
+      --bg-alt: #0b0d18;
+      --card: #101321;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59,130,246,0.15);
+      --accent-2: #22c55e;
+      --accent-2-soft: rgba(34,197,94,0.15);
+      --danger: #ef4444;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --border-subtle: #1f2933;
+      --shadow-soft: 0 18px 45px rgba(0,0,0,0.65);
+      --radius-xl: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #111827 0, #020617 55%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* AUTH / FACE ID SCREEN */
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, #020617 0, #000 65%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      z-index: 60;
+    }
+
+    .auth-card {
+      width: 82%;
+      max-width: 360px;
+      background: rgba(8,11,22,0.96);
+      border-radius: 24px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.9);
+      border: 1px solid rgba(31,41,55,0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .auth-face-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      border: 2px solid rgba(148,163,184,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .auth-face-icon::before {
+      content: "";
+      position: absolute;
+      inset: -12px;
+      border-radius: 24px;
+      border: 1px solid rgba(59,130,246,0.4);
+      opacity: 0.4;
+      animation: pulseFace 2.2s ease-out infinite;
+    }
+
+    @keyframes pulseFace {
+      0% { transform: scale(0.92); opacity: 0.7; }
+      60% { transform: scale(1.06); opacity: 0; }
+      100% { transform: scale(1.06); opacity: 0; }
+    }
+
+    .auth-face-emoji {
+      font-size: 32px;
+    }
+
+    .auth-title {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .auth-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .auth-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .auth-btn-main {
+      width: 100%;
+      border-radius: 999px;
+      padding: 9px 0;
+      border: none;
+      background: linear-gradient(135deg, #2563eb, #38bdf8);
+      color: #e5f2ff;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 10px 30px rgba(37,99,235,0.8);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .auth-btn-secondary {
+      width: 100%;
+      border-radius: 999px;
+      padding: 7px 0;
+      border: 1px solid rgba(75,85,99,0.9);
+      background: rgba(15,23,42,0.96);
+      color: #e5e7eb;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .auth-footer {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* LOADING SCREEN */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, #020617 0, #000 65%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      z-index: 50;
+    }
+
+    .loading-logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .loading-logo-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 26px;
+      background: conic-gradient(from 210deg, #22c55e, #3b82f6, #6366f1, #22c55e);
+      padding: 3px;
+      box-shadow: 0 0 35px rgba(59,130,246,0.65);
+      animation: spinGlow 3.5s linear infinite;
+    }
+
+    .loading-logo-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 23px;
+      background: radial-gradient(circle at 30% 0%, #0b1120, #020617);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 26px;
+      letter-spacing: 0.08em;
+      color: #e5f2ff;
+      text-shadow: 0 0 12px rgba(59,130,246,0.9);
+    }
+
+    .loading-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .loading-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .loading-bar-outer {
+      width: 70%;
+      max-width: 320px;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.8);
+      overflow: hidden;
+      border: 1px solid rgba(148,163,184,0.25);
+      box-shadow: 0 0 0 1px rgba(15,23,42,0.9);
+    }
+
+    .loading-bar-inner {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #22c55e, #3b82f6);
+      box-shadow: 0 0 12px rgba(59,130,246,0.9);
+      transition: width 0.15s ease-out;
+    }
+
+    .loading-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    @keyframes spinGlow {
+      0% { transform: rotate(0deg); box-shadow: 0 0 28px rgba(59,130,246,0.9); }
+      50% { box-shadow: 0 0 40px rgba(34,197,94,0.95); }
+      100% { transform: rotate(360deg); box-shadow: 0 0 28px rgba(59,130,246,0.9); }
+    }
+
+    /* APP SHELL */
+    #app {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 14px 12px 70px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    header.app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 4px 6px;
+    }
+
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 14px;
+      background: conic-gradient(from 200deg, #22c55e, #3b82f6, #6366f1, #22c55e);
+      padding: 2px;
+      cursor: pointer;
+    }
+
+    .brand-logo-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      background: radial-gradient(circle at 30% 0%, #0b1120, #020617);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: #e5f2ff;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-name {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .brand-tagline {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-pill {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(22,163,74,0.18);
+      color: #bbf7d0;
+      border: 1px solid rgba(22,163,74,0.45);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 9px rgba(34,197,94,0.9);
+    }
+
+    .notif-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(55,65,81,0.9);
+      background: rgba(15,23,42,0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+    }
+
+    .notif-dot {
+      position: absolute;
+      top: 3px;
+      right: 4px;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #f97316;
+      box-shadow: 0 0 6px rgba(248,171,89,0.9);
+    }
+
+    .avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 0%, #1d4ed8, #020617);
+      border: 1px solid rgba(148,163,184,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* NOTIFICATION PANEL */
+    .notif-panel-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 70px;
+      z-index: 45;
+    }
+
+    .notif-panel {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(15,23,42,0.98);
+      border-radius: 20px;
+      margin: 0 12px;
+      padding: 10px 12px 8px;
+      border: 1px solid rgba(55,65,81,0.95);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.95);
+    }
+
+    .notif-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .notif-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .notif-clear {
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .notif-list {
+      list-style: none;
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .notif-item {
+      padding: 6px 2px;
+      border-bottom: 1px solid rgba(31,41,55,0.6);
+      font-size: 12px;
+    }
+
+    .notif-item:last-child {
+      border-bottom: none;
+    }
+
+    .notif-label {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .notif-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* TICKER */
+    .ticker {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(31,41,55,0.9);
+      background: rgba(15,23,42,0.95);
+      padding: 4px 0;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+
+    .ticker-track {
+      display: inline-flex;
+      align-items: center;
+      gap: 18px;
+      white-space: nowrap;
+      animation: tickerMove 28s linear infinite;
+      padding-left: 12px;
+    }
+
+    .ticker-item {
+      font-size: 11px;
+      color: #e5e7eb;
+    }
+
+    .ticker-symbol {
+      font-weight: 600;
+      margin-right: 4px;
+    }
+
+    .ticker-change.pos {
+      color: #4ade80;
+    }
+
+    .ticker-change.neg {
+      color: #fca5a5;
+    }
+
+    @keyframes tickerMove {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* SCREENS */
+    .screen {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* BALANCE CARD / HOME */
+    .balance-card {
+      background: radial-gradient(circle at top left, rgba(59,130,246,0.32), #020617 65%);
+      border-radius: 26px;
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(55,65,81,0.7);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .balance-card::before {
+      content: "";
+      position: absolute;
+      inset: -60%;
+      background-image: radial-gradient(circle at 10% 0%, rgba(59,130,246,0.21) 0, transparent 55%),
+                        radial-gradient(circle at 90% 100%, rgba(34,197,94,0.18) 0, transparent 50%);
+      opacity: 0.88;
+      pointer-events: none;
+    }
+
+    .balance-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .balance-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .balance-label {
+      font-size: 13px;
+      color: #cbd5f5;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .balance-chip {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.6);
+      color: #c7d2fe;
+      border: 1px solid rgba(129,140,248,0.5);
+    }
+
+    .balance-amount {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .balance-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .balance-change {
+      font-size: 13px;
+      color: #bbf7d0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .balance-change.neg {
+      color: #fecaca;
+    }
+
+    .change-pill {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(22,163,74,0.22);
+      color: #bbf7d0;
+      border: 1px solid rgba(22,163,74,0.7);
+    }
+
+    .network-label {
+      font-size: 11px;
+      color: #cbd5f5;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .network-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(34,197,94,0.8);
+      position: relative;
+    }
+
+    .network-dot::after {
+      content: "";
+      position: absolute;
+      inset: 2px;
+      border-radius: inherit;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34,197,94,0.8);
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .btn {
+      flex: 1;
+      border-radius: 999px;
+      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.08s ease-out, box-shadow 0.08s ease-out, background 0.12s ease-out;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #38bdf8);
+      color: #eef2ff;
+      box-shadow: 0 10px 30px rgba(59,130,246,0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(15,23,42,0.9);
+      color: #e5e7eb;
+      border: 1px solid rgba(148,163,184,0.6);
+      box-shadow: 0 10px 30px rgba(15,23,42,0.8);
+    }
+
+    .btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: none;
+    }
+
+    .btn-icon {
+      font-size: 14px;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: rgba(15,23,42,0.9);
+      border-radius: 16px;
+      padding: 10px 10px 9px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .stat-tag {
+      font-size: 10px;
+      margin-top: 2px;
+      color: #a5b4fc;
+    }
+
+    /* Tiny chart */
+    .mini-chart {
+      margin-top: 8px;
+      height: 50px;
+    }
+
+    .section-card {
+      background: var(--bg-alt);
+      border-radius: var(--radius-xl);
+      padding: 12px 12px 10px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.7);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .section-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .fake-filter-pill {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(75,85,99,0.8);
+      color: #d1d5db;
+      background: rgba(15,23,42,0.9);
+    }
+
+    .activity-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 180px;
+      overflow: hidden;
+    }
+
+    .activity-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 4px;
+    }
+
+    .activity-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .activity-title {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .activity-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .activity-amount {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .activity-amount.pos {
+      color: #bbf7d0;
+    }
+    .activity-amount.neg {
+      color: #fecaca;
+    }
+
+    /* PORTFOLIO SCREEN */
+    .alloc-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .alloc-bar {
+      display: flex;
+      height: 14px;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(31,41,55,0.9);
+      background: rgba(15,23,42,0.9);
+    }
+
+    .slice-btc { flex: 40; background: linear-gradient(90deg, #f59e0b, #f97316); }
+    .slice-eth { flex: 25; background: linear-gradient(90deg, #6366f1, #3b82f6); }
+    .slice-defi { flex: 20; background: linear-gradient(90deg, #22c55e, #16a34a); }
+    .slice-nova { flex: 15; background: linear-gradient(90deg, #ec4899, #8b5cf6); }
+
+    .alloc-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      margin-top: 8px;
+      font-size: 11px;
+    }
+
+    .alloc-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .alloc-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+    }
+
+    .alloc-dot.btc { background: #f97316; }
+    .alloc-dot.eth { background: #6366f1; }
+    .alloc-dot.defi { background: #22c55e; }
+    .alloc-dot.nova { background: #ec4899; }
+
+    .positions-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .position-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .pos-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .pos-symbol {
+      font-weight: 600;
+    }
+
+    .pos-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .pos-right {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .pos-val {
+      font-weight: 500;
+    }
+
+    .pos-change.pos { color: #4ade80; }
+    .pos-change.neg { color: #fca5a5; }
+
+    /* MARKETS SCREEN */
+    .markets-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .market-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      padding: 6px 2px;
+    }
+
+    .market-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .market-symbol {
+      font-weight: 600;
+    }
+
+    .market-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .market-right {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .market-price {
+      font-weight: 500;
+    }
+
+    .market-change.pos { color: #4ade80; }
+    .market-change.neg { color: #fca5a5; }
+
+    /* SETTINGS SCREEN */
+    .settings-group {
+      margin-bottom: 12px;
+    }
+
+    .settings-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 12px;
+      border-bottom: 1px solid rgba(31,41,55,0.7);
+    }
+
+    .settings-row:last-child {
+      border-bottom: none;
+    }
+
+    .settings-label {
+      color: var(--text-muted);
+    }
+
+    .settings-value {
+      font-weight: 500;
+    }
+
+    .settings-tag {
+      font-size: 11px;
+      color: #a5b4fc;
+      margin-top: 4px;
+    }
+
+    .about-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-top: 6px;
+    }
+
+    /* API DASHBOARD SCREEN */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .kpi-card {
+      background: rgba(15,23,42,0.95);
+      border-radius: 16px;
+      padding: 8px 8px 7px;
+      border: 1px solid rgba(31,41,55,0.9);
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    .kpi-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .kpi-sub {
+      font-size: 10px;
+      color: #a5b4fc;
+      margin-top: 1px;
+    }
+
+    .invoice-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .invoice-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(31,41,55,0.6);
+    }
+
+    .invoice-item:last-child {
+      border-bottom: none;
+    }
+
+    .invoice-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .invoice-id {
+      font-weight: 500;
+    }
+
+    .invoice-meta {
+      color: var(--text-muted);
+    }
+
+    .invoice-amount {
+      font-weight: 500;
+    }
+
+    .invoice-status {
+      font-size: 10px;
+      color: #bbf7d0;
+    }
+
+    .logs-box {
+      background: rgba(15,23,42,0.95);
+      border-radius: 14px;
+      border: 1px solid rgba(31,41,55,0.9);
+      padding: 6px 8px;
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 10px;
+      max-height: 120px;
+      overflow-y: auto;
+      color: #e5e7eb;
+    }
+
+    .log-line {
+      white-space: nowrap;
+      margin-bottom: 2px;
+    }
+
+    .metric-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+      font-size: 11px;
+    }
+
+    .metric-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .metric-label {
+      width: 60px;
+      color: var(--text-muted);
+    }
+
+    .metric-track {
+      flex: 1;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      overflow: hidden;
+      border: 1px solid rgba(31,41,55,0.9);
+    }
+
+    .metric-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #22c55e, #3b82f6);
+      width: 40%;
+    }
+
+    .metric-val {
+      width: 40px;
+      text-align: right;
+    }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 420px;
+      padding: 4px 12px;
+      z-index: 10;
+    }
+
+    .bottom-nav-inner {
+      background: rgba(15,23,42,0.96);
+      border-radius: 999px;
+      border: 1px solid rgba(31,41,55,0.9);
+      padding: 4px;
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.9);
+      backdrop-filter: blur(16px);
+    }
+
+    .nav-item {
+      flex: 1;
+      border-radius: 999px;
+      border: none;
+      padding: 6px 0;
+      font-size: 11px;
+      color: #9ca3af;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-icon {
+      font-size: 16px;
+    }
+
+    .nav-item.active {
+      background: radial-gradient(circle at top, rgba(59,130,246,0.35), rgba(15,23,42,0.98));
+      color: #e5e7eb;
+      box-shadow: 0 0 0 1px rgba(37,99,235,0.6);
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 360px;
+      background: #020617;
+      border-radius: 22px;
+      padding: 18px 16px 14px;
+      border: 1px solid rgba(55,65,81,0.9);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.95);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .modal-caption {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .modal-input-group {
+      display: flex;
+      align-items: center;
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid rgba(75,85,99,0.9);
+      padding: 8px 10px;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .modal-input-group span {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    .modal-input-group input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      color: #e5e7eb;
+      padding: 2px 0;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn-ghost {
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(75,85,99,0.9);
+      background: transparent;
+      color: #d1d5db;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-solid {
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #2563eb, #38bdf8);
+      color: #f9fafb;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 75px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15,23,42,0.98);
+      color: #e5e7eb;
+      font-size: 12px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(55,65,81,0.9);
+      box-shadow: 0 14px 35px rgba(0,0,0,0.9);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+      z-index: 35;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    @media (max-width: 380px) {
+      .balance-amount {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- FACE ID / AUTH SCREEN -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <div class="auth-face-icon">
+        <div class="auth-face-emoji">😶‍🌫️</div>
+      </div>
+      <div class="auth-title">Unlock NovaCrypto</div>
+      <div class="auth-subtitle">
+        Use Face ID to access your Nova wallet and yield engine.
+      </div>
+      <div class="auth-actions">
+        <button class="auth-btn-main" id="auth-face-btn">
+          <span>Use Face ID</span>
+        </button>
+        <button class="auth-btn-secondary" id="auth-passcode-btn">
+          <span>Use Device Passcode</span>
+        </button>
+      </div>
+      <div class="auth-footer">NovaCore Secure Session • v1.9.3</div>
+    </div>
+  </div>
+
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen" class="hidden">
+    <div class="loading-logo-wrap">
+      <div class="loading-logo-icon">
+        <div class="loading-logo-inner">NC</div>
+      </div>
+      <div class="loading-title">NovaCrypto</div>
+      <div class="loading-subtitle">Secure Digital Yield Engine</div>
+    </div>
+
+    <div class="loading-bar-outer">
+      <div class="loading-bar-inner" id="loading-bar"></div>
+    </div>
+    <div class="loading-meta" id="loading-meta">Syncing with NovaCore™ mainnet...</div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="hidden">
+    <header class="app-header">
+      <div class="app-brand">
+        <div class="brand-logo" id="brand-logo">
+          <div class="brand-logo-inner">NV</div>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">NovaCrypto</div>
+          <div class="brand-tagline">Multi-asset yield wallet</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span>Live</span>
+        </div>
+        <button class="notif-btn" id="notif-btn">
+          <span>🔔</span>
+          <span class="notif-dot" id="notif-dot"></span>
+        </button>
+        <div class="avatar">DT</div>
+      </div>
+    </header>
+
+    <main>
+      <!-- TICKER -->
+      <div class="ticker">
+        <div class="ticker-track" id="ticker-track"></div>
+      </div>
+
+      <!-- HOME SCREEN -->
+      <div class="screen active" id="screen-home">
+        <section class="balance-card">
+          <div class="balance-inner">
+            <div class="balance-header">
+              <div class="balance-label">Total Balance</div>
+              <div class="balance-chip">Nova Tier • Prime</div>
+            </div>
+            <div class="balance-amount" id="balance-amount">$40,000.00</div>
+
+            <div class="balance-meta-row">
+              <div class="balance-change" id="balance-change">
+                <span>▲</span>
+                <span>+$0.00 today</span>
+                <span class="change-pill" id="change-pill">+0.00%</span>
+              </div>
+              <div class="network-label">
+                <span class="network-dot"></span>
+                <span>Network: Nova Mainnet</span>
+              </div>
+            </div>
+
+            <div class="controls-row">
+              <button class="btn btn-primary" id="add-funds-btn">
+                <span class="btn-icon">＋</span>
+                <span>Add Funds</span>
+              </button>
+              <button class="btn btn-secondary" id="withdraw-funds-btn">
+                <span class="btn-icon">⇄</span>
+                <span>Withdraw</span>
+              </button>
+            </div>
+
+            <div class="stats-row">
+              <div class="stat-card">
+                <div class="stat-label">24h Yield</div>
+                <div class="stat-value" id="stat-24h-yield">+$0.00</div>
+                <div class="stat-tag">NovaEarn • Auto</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">7d Performance</div>
+                <div class="stat-value" id="stat-7d">+2.84%</div>
+                <div class="stat-tag">vs. market &beta;</div>
+              </div>
+            </div>
+
+            <!-- Tiny fake chart -->
+            <svg class="mini-chart" viewBox="0 0 120 40" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#22c55e" />
+                  <stop offset="50%" stop-color="#3b82f6" />
+                  <stop offset="100%" stop-color="#6366f1" />
+                </linearGradient>
+                <linearGradient id="areaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="rgba(56,189,248,0.55)" />
+                  <stop offset="100%" stop-color="rgba(15,23,42,0.02)" />
+                </linearGradient>
+              </defs>
+              <path d="M0 30 L15 26 L30 28 L45 22 L60 18 L75 19 L90 14 L105 12 L120 8" fill="none" stroke="url(#lineGrad)" stroke-width="1.8" />
+              <path d="M0 40 L0 30 L15 26 L30 28 L45 22 L60 18 L75 19 L90 14 L105 12 L120 8 L120 40Z" fill="url(#areaGrad)" />
+            </svg>
+          </div>
+        </section>
+
+        <!-- Activity -->
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">Recent Activity</div>
+              <div class="section-subtitle">Last 6 operations</div>
+            </div>
+            <button class="fake-filter-pill" type="button">Filters ▾</button>
+          </div>
+
+          <ul class="activity-list" id="activity-list">
+            <li class="activity-item">
+              <div class="activity-main">
+                <div class="activity-title">Auto-yield cycle</div>
+                <div class="activity-subtitle">NovaCore scheduled reward</div>
+              </div>
+              <div class="activity-amount pos">+$15.00</div>
+            </li>
+            <li class="activity-item">
+              <div class="activity-main">
+                <div class="activity-title">Portfolio rebalance</div>
+                <div class="activity-subtitle">BTC / ETH / Index basket</div>
+              </div>
+              <div class="activity-amount">•••</div>
+            </li>
+            <li class="activity-item">
+              <div class="activity-main">
+                <div class="activity-title">Security check</div>
+                <div class="activity-subtitle">Device verified • iOS</div>
+              </div>
+              <div class="activity-amount">OK</div>
+            </li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- PORTFOLIO SCREEN -->
+      <div class="screen" id="screen-portfolio">
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">Portfolio Overview</div>
+              <div class="section-subtitle">Diversified across 4 segments</div>
+            </div>
+            <button class="fake-filter-pill" type="button">7d ▾</button>
+          </div>
+
+          <div class="alloc-row">
+            <div class="alloc-bar">
+              <div class="slice-btc"></div>
+              <div class="slice-eth"></div>
+              <div class="slice-defi"></div>
+              <div class="slice-nova"></div>
+            </div>
+            <div class="alloc-legend">
+              <div class="alloc-pill"><span class="alloc-dot btc"></span><span>BTC 40%</span></div>
+              <div class="alloc-pill"><span class="alloc-dot eth"></span><span>ETH 25%</span></div>
+              <div class="alloc-pill"><span class="alloc-dot defi"></span><span>DeFi Index 20%</span></div>
+              <div class="alloc-pill"><span class="alloc-dot nova"></span><span>Nova Staking 15%</span></div>
+            </div>
+          </div>
+
+          <ul class="positions-list">
+            <li class="position-item">
+              <div class="pos-main">
+                <span class="pos-symbol">BTC</span>
+                <span class="pos-sub">Core reserve • 0.41 BTC</span>
+              </div>
+              <div class="pos-right">
+                <span class="pos-val" id="pos-btc-val">$16,000.00</span>
+                <span class="pos-change pos" id="pos-btc-chg">+1.42%</span>
+              </div>
+            </li>
+            <li class="position-item">
+              <div class="pos-main">
+                <span class="pos-symbol">ETH</span>
+                <span class="pos-sub">Yield layer • 6.2 ETH</span>
+              </div>
+              <div class="pos-right">
+                <span class="pos-val" id="pos-eth-val">$10,000.00</span>
+                <span class="pos-change pos" id="pos-eth-chg">+2.37%</span>
+              </div>
+            </li>
+            <li class="position-item">
+              <div class="pos-main">
+                <span class="pos-symbol">DeFi Basket</span>
+                <span class="pos-sub">Index of 12 pooled assets</span>
+              </div>
+              <div class="pos-right">
+                <span class="pos-val" id="pos-defi-val">$8,000.00</span>
+                <span class="pos-change neg" id="pos-defi-chg">-0.64%</span>
+              </div>
+            </li>
+            <li class="position-item">
+              <div class="pos-main">
+                <span class="pos-symbol">NCX</span>
+                <span class="pos-sub">Nova native token • staked</span>
+              </div>
+              <div class="pos-right">
+                <span class="pos-val" id="pos-nova-val">$6,000.00</span>
+                <span class="pos-change pos" id="pos-nova-chg">+4.12%</span>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">NovaCard</div>
+              <div class="section-subtitle">Metal debit with NCX rewards</div>
+            </div>
+            <button class="fake-filter-pill" type="button">Manage ▾</button>
+          </div>
+          <div class="about-text">
+            Status: <strong>Approved</strong><br>
+            Limit: <strong>$7,500</strong><br>
+            Cashback: <strong>3% in NCX</strong> on all spends.
+          </div>
+        </section>
+      </div>
+
+      <!-- MARKETS SCREEN -->
+      <div class="screen" id="screen-markets">
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">Markets</div>
+              <div class="section-subtitle">Spot & synthetic prices</div>
+            </div>
+            <button class="fake-filter-pill" type="button">Watchlist ▾</button>
+          </div>
+
+          <ul class="markets-list" id="markets-list"></ul>
+        </section>
+      </div>
+
+      <!-- API DASHBOARD SCREEN -->
+      <div class="screen" id="screen-api">
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">API Business Dashboard</div>
+              <div class="section-subtitle">NovaAPI Services • v3.2</div>
+            </div>
+            <button class="fake-filter-pill" type="button">Today ▾</button>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label">Active Subscribers</div>
+              <div class="kpi-value" id="api-subscribers">2,318</div>
+              <div class="kpi-sub">Monthly $15 + tax plan</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">MRR (est.)</div>
+              <div class="kpi-value" id="api-mrr">$37,624</div>
+              <div class="kpi-sub">Recurring API revenue</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">API Calls Today</div>
+              <div class="kpi-value" id="api-requests">54,301</div>
+              <div class="kpi-sub">Autoscaled across clusters</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Status / Uptime</div>
+              <div class="kpi-value" id="api-uptime">99.997%</div>
+              <div class="kpi-sub" id="api-status-text">Operational • All regions</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">Billing & Invoices</div>
+              <div class="section-subtitle">Processed via Stripe / NovaPay</div>
+            </div>
+            <button class="fake-filter-pill" type="button">Export ▾</button>
+          </div>
+
+          <ul class="invoice-list" id="invoice-list">
+            <li class="invoice-item">
+              <div class="invoice-main">
+                <span class="invoice-id">NC-2025-0015</span>
+                <span class="invoice-meta">Jan 2025 • 2,318 subs • Stripe</span>
+              </div>
+              <div style="text-align:right">
+                <div class="invoice-amount">$37,624.32</div>
+                <div class="invoice-status">Paid</div>
+              </div>
+            </li>
+            <li class="invoice-item">
+              <div class="invoice-main">
+                <span class="invoice-id">NC-2024-0014</span>
+                <span class="invoice-meta">Dec 2024 • 2,112 subs • Stripe</span>
+              </div>
+              <div style="text-align:right">
+                <div class="invoice-amount">$34,112.51</div>
+                <div class="invoice-status">Paid</div>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">System Metrics</div>
+              <div class="section-subtitle">NovaCluster-14 • US-EAST-2</div>
+            </div>
+            <button class="fake-filter-pill" type="button">Realtime ▾</button>
+          </div>
+
+          <div class="metric-bars">
+            <div class="metric-row">
+              <div class="metric-label">CPU</div>
+              <div class="metric-track"><div class="metric-fill" id="metric-cpu"></div></div>
+              <div class="metric-val" id="metric-cpu-val">21%</div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-label">Memory</div>
+              <div class="metric-track"><div class="metric-fill" id="metric-mem"></div></div>
+              <div class="metric-val" id="metric-mem-val">54%</div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-label">I/O</div>
+              <div class="metric-track"><div class="metric-fill" id="metric-io"></div></div>
+              <div class="metric-val" id="metric-io-val">7%</div>
+            </div>
+          </div>
+
+          <div class="settings-tag" style="margin-top:8px;">
+            Data simulated • for interface demonstration only
+          </div>
+
+          <div class="logs-box" id="logs-box"></div>
+        </section>
+      </div>
+
+      <!-- SETTINGS SCREEN -->
+      <div class="screen" id="screen-settings">
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">Security & Identity</div>
+              <div class="section-subtitle">Backed by NovaGuard™</div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">KYC status</div>
+              </div>
+              <div class="settings-value">Verified • Prime</div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Account ID</div>
+              </div>
+              <div class="settings-value" id="account-id">NCW-8F3A-9220-XKLA-99104</div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Trusted device</div>
+              </div>
+              <div class="settings-value">This iPhone • Secure</div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">NovaGuard score</div>
+                <div class="settings-tag">Higher is better • updated daily</div>
+              </div>
+              <div class="settings-value" id="novaguard-score">96 / 100</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-card">
+          <div class="section-header">
+            <div>
+              <div class="section-title">Legal & About</div>
+              <div class="section-subtitle">NovaFoundation Labs</div>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-row">
+              <span class="settings-label">Privacy Policy</span>
+              <span class="settings-value">View</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Terms of Service</span>
+              <span class="settings-value">View</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Licenses</span>
+              <span class="settings-value">Open source</span>
+            </div>
+          </div>
+
+          <div class="about-text">
+            NovaCrypto UI v1.9.3 • © 2025 NovaFoundation Labs<br>
+            This interface is a <strong>simulated experience for entertainment and demonstration only</strong>. No
+            actual financial accounts are accessed or managed.
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <div class="bottom-nav-inner">
+        <button class="nav-item active" data-tab="home">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </button>
+        <button class="nav-item" data-tab="portfolio">
+          <span class="nav-icon">📊</span>
+          <span>Portfolio</span>
+        </button>
+        <button class="nav-item" data-tab="markets">
+          <span class="nav-icon">📈</span>
+          <span>Markets</span>
+        </button>
+        <button class="nav-item" data-tab="api">
+          <span class="nav-icon">🧩</span>
+          <span>API</span>
+        </button>
+        <button class="nav-item" data-tab="settings">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Modal -->
+    <div class="modal-overlay hidden" id="modal-overlay">
+      <div class="modal">
+        <div class="modal-title" id="modal-title">Add Funds</div>
+        <div class="modal-caption" id="modal-caption">
+          Simulate adding funds from an external wallet or bank account.
+        </div>
+        <div class="modal-input-group">
+          <span>$</span>
+          <input type="number" id="amount-input" placeholder="0.00" min="0" step="0.01" inputmode="decimal">
+        </div>
+        <div class="modal-actions">
+          <button class="btn-ghost" id="modal-cancel">Cancel</button>
+          <button class="btn-solid" id="modal-confirm">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Panel -->
+    <div class="notif-panel-overlay hidden" id="notif-overlay">
+      <div class="notif-panel">
+        <div class="notif-header">
+          <div class="notif-title">Notifications</div>
+          <div class="notif-clear" id="notif-clear">Clear</div>
+        </div>
+        <ul class="notif-list" id="notif-list"></ul>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">Coming soon to NovaCrypto.</div>
+  </div>
+
+  <script>
+    (function () {
+      const BALANCE_KEY = "novaCryptoBalance";
+      const LAST_UPDATE_KEY = "novaCryptoLastUpdate";
+      const START_BALANCE = 40000;
+
+      const AUTO_BASE = 15;            // base yield
+      const AUTO_VAR = 0.6;            // variance around base
+      const INCOME_MIN_MS = 10000;     // 10 seconds
+      const INCOME_MAX_MS = 120000;    // 2 minutes
+
+      const FEE_MIN_MS = 30000;        // 30 seconds
+      const FEE_MAX_MS = 300000;       // 5 minutes
+
+      const SUB_PRICE = 15;
+      const SUB_TAX_RATE = 0.0825;     // 8.25% tax
+      const LOADING_DURATION = 15000;  // 15s
+
+      let balance = START_BALANCE;
+      let baselineBalance = START_BALANCE;
+      let currentMode = "add";
+      let toastTimeout = null;
+      let faceTapCount = 0;
+      let faceTapTimer = null;
+
+      // Simple API/business state
+      let apiSubscribers = 2318;
+      let apiRequestsToday = 54301;
+      let apiMRR = 37624;
+      let novaguardScore = 96;
+
+      // Elements
+      const authScreen = document.getElementById("auth-screen");
+      const authFaceBtn = document.getElementById("auth-face-btn");
+      const authPasscodeBtn = document.getElementById("auth-passcode-btn");
+
+      const loadingScreen = document.getElementById("loading-screen");
+      const loadingBar = document.getElementById("loading-bar");
+      const loadingMeta = document.getElementById("loading-meta");
+      const app = document.getElementById("app");
+
+      const balanceEl = document.getElementById("balance-amount");
+      const balanceChangeEl = document.getElementById("balance-change");
+      const stat24hEl = document.getElementById("stat-24h-yield");
+      const stat7dEl = document.getElementById("stat-7d");
+
+      const addBtn = document.getElementById("add-funds-btn");
+      const withdrawBtn = document.getElementById("withdraw-funds-btn");
+
+      const modalOverlay = document.getElementById("modal-overlay");
+      const modalTitle = document.getElementById("modal-title");
+      const modalCaption = document.getElementById("modal-caption");
+      const amountInput = document.getElementById("amount-input");
+      const modalCancel = document.getElementById("modal-cancel");
+      const modalConfirm = document.getElementById("modal-confirm");
+
+      const activityList = document.getElementById("activity-list");
+      const toastEl = document.getElementById("toast");
+
+      const tickerTrack = document.getElementById("ticker-track");
+      const marketsList = document.getElementById("markets-list");
+      const brandLogo = document.getElementById("brand-logo");
+
+      const apiSubsEl = document.getElementById("api-subscribers");
+      const apiMRREl = document.getElementById("api-mrr");
+      const apiReqEl = document.getElementById("api-requests");
+      const apiUptimeEl = document.getElementById("api-uptime");
+      const apiStatusTextEl = document.getElementById("api-status-text");
+      const invoiceListEl = document.getElementById("invoice-list");
+
+      const metricCpu = document.getElementById("metric-cpu");
+      const metricMem = document.getElementById("metric-mem");
+      const metricIo = document.getElementById("metric-io");
+      const metricCpuVal = document.getElementById("metric-cpu-val");
+      const metricMemVal = document.getElementById("metric-mem-val");
+      const metricIoVal = document.getElementById("metric-io-val");
+      const logsBox = document.getElementById("logs-box");
+      const novaguardScoreEl = document.getElementById("novaguard-score");
+
+      const notifBtn = document.getElementById("notif-btn");
+      const notifDot = document.getElementById("notif-dot");
+      const notifOverlay = document.getElementById("notif-overlay");
+      const notifList = document.getElementById("notif-list");
+      const notifClear = document.getElementById("notif-clear");
+
+      const navButtons = document.querySelectorAll(".nav-item");
+      const screens = {
+        home: document.getElementById("screen-home"),
+        portfolio: document.getElementById("screen-portfolio"),
+        markets: document.getElementById("screen-markets"),
+        api: document.getElementById("screen-api"),
+        settings: document.getElementById("screen-settings")
+      };
+
+      // Fake market data
+      const marketData = [
+        { symbol: "NCX", name: "Nova Token", price: 1.42, change: 0.57 },
+        { symbol: "BTC", name: "Bitcoin", price: 92000, change: -0.42 },
+        { symbol: "ETH", name: "Ethereum", price: 4630, change: 1.19 },
+        { symbol: "SOL", name: "Solana", price: 182.31, change: 3.02 },
+        { symbol: "SPY", name: "S&P 500 Index", price: 554.23, change: 0.37 },
+        { symbol: "QQQ", name: "Nasdaq 100 ETF", price: 421.77, change: 0.82 }
+      ];
+
+      const tickerMessages = [
+        "NovaCore mainnet stable.",
+        "DeFi yields refreshed.",
+        "NCX rewards distributed.",
+        "Security scan passed.",
+        "Volatility elevated — beta hedged.",
+        "Synced with premium data feeds."
+      ];
+
+      const logLinesBase = [
+        "Synced wallet engine.",
+        "API request processed.",
+        "Billing sequence finalized.",
+        "NovaGuard security check passed.",
+        "DeFi pool snapshot saved.",
+        "Cluster autoscale event complete.",
+        "Background job: yield batch settled.",
+        "Redis cache warm for /v1/prices.",
+        "Latency within SLA thresholds.",
+        "New client token issued."
+      ];
+
+      function formatCurrency(value) {
+        const safeVal = isNaN(value) ? 0 : value;
+        return "$" + safeVal.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      }
+
+      function randomWithin(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
+      function randomInt(min, max) {
+        return Math.floor(min + Math.random() * (max - min + 1));
+      }
+
+      function loadBalance() {
+        const stored = localStorage.getItem(BALANCE_KEY);
+        const storedUpdate = localStorage.getItem(LAST_UPDATE_KEY);
+
+        if (stored !== null) {
+          const parsed = parseFloat(stored);
+          balance = isNaN(parsed) ? START_BALANCE : parsed;
+        } else {
+          balance = START_BALANCE;
+        }
+
+        // If there's an old timestamp we can, for realism, bump a bit using base
+        if (storedUpdate) {
+          const last = parseInt(storedUpdate, 10);
+          if (!isNaN(last)) {
+            const now = Date.now();
+            const diff = now - last;
+            const approxInterval = 120000;
+            if (diff > approxInterval) {
+              const increments = Math.floor(diff / approxInterval);
+              if (increments > 0) {
+                balance += increments * AUTO_BASE;
+              }
+            }
+          }
+        }
+
+        baselineBalance = balance;
+        saveBalance();
+        updateBalanceUI(true);
+      }
+
+      function saveBalance() {
+        localStorage.setItem(BALANCE_KEY, String(balance));
+        localStorage.setItem(LAST_UPDATE_KEY, String(Date.now()));
+      }
+
+      function updateBalanceUI(initial) {
+        balanceEl.textContent = formatCurrency(balance);
+
+        const delta = balance - baselineBalance;
+        const isPositive = delta >= 0;
+        const percentage = baselineBalance > 0
+          ? (delta / baselineBalance) * 100
+          : 0;
+
+        balanceChangeEl.classList.toggle("neg", !isPositive);
+        const arrow = isPositive ? "▲" : "▼";
+        const sign = isPositive ? "+" : "-";
+        const absDelta = Math.abs(delta);
+
+        balanceChangeEl.innerHTML =
+          `<span>${arrow}</span><span>${sign}${formatCurrency(absDelta).replace("$", "$")} today</span><span class="change-pill" id="change-pill">${(isPositive ? "+" : "-") + Math.abs(percentage).toFixed(2)}%</span>`;
+
+        const pill = document.getElementById("change-pill");
+        if (pill) {
+          const pctText = (isPositive ? "+" : "-") + Math.abs(percentage).toFixed(2) + "%";
+          pill.textContent = pctText;
+        }
+
+        stat24hEl.textContent = (delta >= 0 ? "+" : "-") + formatCurrency(Math.abs(delta)).replace("$", "$");
+
+        if (!initial) {
+          const base = 2.5;
+          const jitter = (Math.random() - 0.5) * 0.6;
+          const val = (base + jitter).toFixed(2);
+          stat7dEl.textContent = (val >= 0 ? "+" : "") + val + "%";
+        }
+      }
+
+      function prependActivity(title, subtitle, amount, type) {
+        const li = document.createElement("li");
+        li.className = "activity-item";
+
+        const main = document.createElement("div");
+        main.className = "activity-main";
+
+        const t = document.createElement("div");
+        t.className = "activity-title";
+        t.textContent = title;
+
+        const s = document.createElement("div");
+        s.className = "activity-subtitle";
+        s.textContent = subtitle;
+
+        main.appendChild(t);
+        main.appendChild(s);
+
+        const amt = document.createElement("div");
+        amt.className = "activity-amount";
+        if (type === "pos") amt.classList.add("pos");
+        if (type === "neg") amt.classList.add("neg");
+
+        if (typeof amount === "number") {
+          const prefix = type === "neg" ? "-" : "+";
+          amt.textContent = prefix + formatCurrency(Math.abs(amount));
+        } else {
+          amt.textContent = amount;
+        }
+
+        li.appendChild(main);
+        li.appendChild(amt);
+
+        activityList.insertBefore(li, activityList.firstChild);
+
+        const items = activityList.querySelectorAll(".activity-item");
+        if (items.length > 6) {
+          activityList.removeChild(activityList.lastChild);
+        }
+      }
+
+      function pushLog(line) {
+        const time = new Date();
+        const hh = String(time.getHours()).padStart(2, "0");
+        const mm = String(time.getMinutes()).padStart(2, "0");
+        const ss = String(time.getSeconds()).padStart(2, "0");
+        const div = document.createElement("div");
+        div.className = "log-line";
+        div.textContent = `[${hh}:${mm}:${ss}] ${line}`;
+        logsBox.insertBefore(div, logsBox.firstChild);
+
+        const lines = logsBox.querySelectorAll(".log-line");
+        if (lines.length > 40) {
+          logsBox.removeChild(logsBox.lastChild);
+        }
+      }
+
+      function updateApiUI() {
+        apiSubsEl.textContent = apiSubscribers.toLocaleString("en-US");
+        apiReqEl.textContent = apiRequestsToday.toLocaleString("en-US");
+        apiMRR = Math.round(apiSubscribers * (SUB_PRICE * (1 + SUB_TAX_RATE)));
+        apiMRREl.textContent = formatCurrency(apiMRR);
+
+        // Slight jitter on uptime / status text
+        const baseUptime = 99.99;
+        const jitter = (Math.random() - 0.5) * 0.01;
+        const uptime = Math.max(99.95, baseUptime + jitter);
+        apiUptimeEl.textContent = uptime.toFixed(3) + "%";
+
+        const statusVariants = [
+          "Operational • All regions",
+          "Operational • minor latency",
+          "Monitoring • US-EAST-2",
+          "Operational • Degraded EU node"
+        ];
+        apiStatusTextEl.textContent = statusVariants[randomInt(0, statusVariants.length - 1)];
+      }
+
+      function updateMetrics() {
+        const cpu = randomInt(18, 46);
+        const mem = randomInt(42, 68);
+        const io = randomInt(4, 18);
+
+        metricCpu.style.width = cpu + "%";
+        metricMem.style.width = mem + "%";
+        metricIo.style.width = io + "%";
+
+        metricCpuVal.textContent = cpu + "%";
+        metricMemVal.textContent = mem + "%";
+        metricIoVal.textContent = io + "%";
+      }
+
+      function scheduleMetricsLoop() {
+        updateMetrics();
+        setInterval(updateMetrics, 7000);
+      }
+
+      function addNotification(title, meta) {
+        notifDot.classList.remove("hidden");
+
+        const li = document.createElement("li");
+        li.className = "notif-item";
+
+        const label = document.createElement("div");
+        label.className = "notif-label";
+        label.textContent = title;
+
+        const metaEl = document.createElement("div");
+        metaEl.className = "notif-meta";
+        metaEl.textContent = meta;
+
+        li.appendChild(label);
+        li.appendChild(metaEl);
+
+        notifList.insertBefore(li, notifList.firstChild);
+
+        const items = notifList.querySelectorAll(".notif-item");
+        if (items.length > 25) {
+          notifList.removeChild(notifList.lastChild);
+        }
+      }
+
+      function showToast(message) {
+        toastEl.textContent = message;
+        toastEl.classList.add("show");
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          toastEl.classList.remove("show");
+        }, 1800);
+      }
+
+      // Random income events (10s – 2min)
+      function scheduleNextIncome() {
+        const delay = randomWithin(INCOME_MIN_MS, INCOME_MAX_MS);
+        setTimeout(() => {
+          triggerIncomeEvent();
+          scheduleNextIncome();
+        }, delay);
+      }
+
+      function triggerIncomeEvent() {
+        // Decide what kind of income this is
+        const roll = Math.random();
+        let amount = 0;
+        let title = "";
+        let subtitle = "";
+        let type = "pos";
+
+        if (roll < 0.55) {
+          // API subscription billing
+          const totalPerSub = SUB_PRICE * (1 + SUB_TAX_RATE);
+          const subsBilled = randomInt(1, 4);
+          amount = totalPerSub * subsBilled;
+          apiSubscribers += randomInt(0, 2); // maybe couple new
+          apiRequestsToday += randomInt(500, 4500);
+
+          title = "API subscription billing";
+          subtitle = subsBilled + "x $15 + tax • NovaAPI Services";
+
+          addNotification("API billing batch processed", subsBilled + " subs charged • " + formatCurrency(amount));
+          pushLog("Processed API billing batch for " + subsBilled + " subscribers.");
+
+        } else if (roll < 0.8) {
+          // Auto-yield / staking
+          const inc = randomWithin(AUTO_BASE - AUTO_VAR, AUTO_BASE + AUTO_VAR);
+          amount = Math.round(inc * 100) / 100;
+          title = "Auto-yield cycle";
+          subtitle = "NovaCore scheduled reward • staking";
+
+          addNotification("Yield cycle completed", "Auto-yield: " + formatCurrency(amount));
+          pushLog("Auto-yield distribution completed (" + formatCurrency(amount) + ").");
+        } else if (roll < 0.92) {
+          // Dividend or stock-based
+          amount = Math.round(randomWithin(8, 45) * 100) / 100;
+          const picks = [
+            "AAPL quarterly dividend",
+            "TSLA stock lending yield",
+            "MSFT dividend payout",
+            "Index ETF distribution"
+          ];
+          title = "Equity dividend";
+          subtitle = picks[randomInt(0, picks.length - 1)];
+
+          addNotification("Dividend received", title + " • " + formatCurrency(amount));
+          pushLog("Equity income event recorded (" + subtitle + ").");
+        } else {
+          // Mining / DeFi random
+          amount = Math.round(randomWithin(5, 32) * 100) / 100;
+          title = "DeFi pool rewards";
+          subtitle = "NCX/ETH LP incentives";
+
+          addNotification("DeFi rewards harvested", formatCurrency(amount) + " added to balance.");
+          pushLog("DeFi pool harvest executed.");
+        }
+
+        balance += amount;
+        saveBalance();
+        updateBalanceUI();
+        updateApiUI();
+        prependActivity(title, subtitle, amount, type);
+      }
+
+      // Random fee events (passive costs)
+      function scheduleNextFee() {
+        const delay = randomWithin(FEE_MIN_MS, FEE_MAX_MS);
+        setTimeout(() => {
+          triggerFeeEvent();
+          scheduleNextFee();
+        }, delay);
+      }
+
+      function triggerFeeEvent() {
+        const roll = Math.random();
+        let amount = 0;
+        let title = "";
+        let subtitle = "";
+        let type = "neg";
+
+        if (roll < 0.5) {
+          amount = Math.round(randomWithin(7, 29) * 100) / 100;
+          title = "Cloud infrastructure fee";
+          subtitle = "NovaCluster-14 • compute + storage";
+
+          pushLog("Cloud provider invoice debited (" + formatCurrency(amount) + ").");
+          addNotification("Infra costs paid", subtitle + " • " + formatCurrency(amount));
+        } else if (roll < 0.8) {
+          amount = Math.round(randomWithin(3, 14) * 100) / 100;
+          title = "Network / bandwidth fee";
+          subtitle = "API egress & CDN traffic";
+
+          pushLog("Bandwidth billing cycle settled.");
+          addNotification("Network fee charged", formatCurrency(amount) + " bandwidth usage.");
+        } else {
+          amount = Math.round(randomWithin(1.5, 6.5) * 100) / 100;
+          title = "Chain gas / validator fee";
+          subtitle = "Gas costs for settlement & rebalancing";
+
+          pushLog("On-chain gas fee paid.");
+          addNotification("Gas fee deducted", formatCurrency(amount) + " charged.");
+        }
+
+        if (amount > balance) return; // don't go negative, silently skip
+
+        balance -= amount;
+        saveBalance();
+        updateBalanceUI();
+        updateApiUI();
+        prependActivity(title, subtitle, amount, type);
+      }
+
+      function initNav() {
+        navButtons.forEach(btn => {
+          btn.addEventListener("click", () => {
+            navButtons.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            const tab = btn.getAttribute("data-tab");
+            Object.keys(screens).forEach(key => {
+              screens[key].classList.toggle("active", key === tab);
+            });
+
+            if (tab === "api") {
+              showToast("Admin view • NovaAPI metrics.");
+            } else if (tab !== "home" && tab !== "settings") {
+              showToast("Module temporarily in read-only mode.");
+            }
+          });
+        });
+      }
+
+      function initModalListeners() {
+        addBtn.addEventListener("click", () => openModal("add"));
+        withdrawBtn.addEventListener("click", () => openModal("withdraw"));
+        modalCancel.addEventListener("click", closeModal);
+        modalOverlay.addEventListener("click", (e) => {
+          if (e.target === modalOverlay) closeModal();
+        });
+        modalConfirm.addEventListener("click", handleConfirm);
+      }
+
+      function openModal(mode) {
+        currentMode = mode;
+        if (mode === "add") {
+          modalTitle.textContent = "Add Funds";
+          modalCaption.textContent = "Simulate adding funds from an external wallet or bank.";
+        } else {
+          modalTitle.textContent = "Withdraw Funds";
+          modalCaption.textContent = "Simulate withdrawing to your connected bank account.";
+        }
+        amountInput.value = "";
+        modalOverlay.classList.remove("hidden");
+        setTimeout(() => amountInput.focus(), 50);
+      }
+
+      function closeModal() {
+        modalOverlay.classList.add("hidden");
+      }
+
+      function handleConfirm() {
+        const raw = amountInput.value.trim();
+        const val = parseFloat(raw);
+        if (isNaN(val) || val <= 0) {
+          showToast("Enter an amount greater than 0.");
+          return;
+        }
+
+        if (currentMode === "add") {
+          balance += val;
+          prependActivity("Manual deposit", "External wallet → NovaCrypto", val, "pos");
+          addNotification("Manual deposit", "External funds added • " + formatCurrency(val));
+          pushLog("Manual deposit recorded from external source.");
+        } else {
+          if (val > balance) {
+            showToast("Insufficient balance for that withdrawal.");
+            return;
+          }
+          balance -= val;
+          prependActivity("Manual withdrawal", "NovaCrypto → Bank account", val, "neg");
+          addNotification("Manual withdrawal", "Payout initiated • " + formatCurrency(val));
+          pushLog("Manual withdrawal simulated.");
+        }
+
+        saveBalance();
+        updateBalanceUI();
+        closeModal();
+      }
+
+      function initTicker() {
+        tickerTrack.innerHTML = "";
+        const fullItems = [];
+
+        marketData.forEach(m => {
+          const span = document.createElement("span");
+          span.className = "ticker-item";
+          const changeClass = m.change >= 0 ? "pos" : "neg";
+          const sign = m.change >= 0 ? "+" : "";
+          span.innerHTML = `<span class="ticker-symbol">${m.symbol}</span>${m.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="ticker-change ${changeClass}">${sign}${m.change.toFixed(2)}%</span>`;
+          fullItems.push(span);
+        });
+
+        tickerMessages.forEach(msg => {
+          const span = document.createElement("span");
+          span.className = "ticker-item";
+          span.textContent = msg;
+          fullItems.push(span);
+        });
+
+        [...fullItems, ...fullItems].forEach(el => tickerTrack.appendChild(el));
+
+        setInterval(() => {
+          marketData.forEach(m => {
+            const jitter = (Math.random() - 0.5) * 0.8;
+            m.change = Math.max(Math.min(m.change + jitter, 6.0), -6.0);
+          });
+        }, 8000);
+      }
+
+      function initMarkets() {
+        marketsList.innerHTML = "";
+        marketData.forEach(m => {
+          const li = document.createElement("li");
+          li.className = "market-row";
+
+          const main = document.createElement("div");
+          main.className = "market-main";
+          const sym = document.createElement("span");
+          sym.className = "market-symbol";
+          sym.textContent = m.symbol;
+          const sub = document.createElement("span");
+          sub.className = "market-sub";
+          sub.textContent = m.name;
+          main.appendChild(sym);
+          main.appendChild(sub);
+
+          const right = document.createElement("div");
+          right.className = "market-right";
+          const price = document.createElement("span");
+          price.className = "market-price";
+          price.textContent = "$" + m.price.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
+          const change = document.createElement("span");
+          change.className = "market-change " + (m.change >= 0 ? "pos" : "neg");
+          const sign = m.change >= 0 ? "+" : "";
+          change.textContent = sign + m.change.toFixed(2) + "%";
+
+          right.appendChild(price);
+          right.appendChild(change);
+
+          li.appendChild(main);
+          li.appendChild(right);
+          marketsList.appendChild(li);
+        });
+
+        setInterval(() => {
+          const children = marketsList.children;
+          for (let i = 0; i < children.length; i++) {
+            const m = marketData[i];
+            const row = children[i];
+            const priceEl = row.querySelector(".market-price");
+            const changeEl = row.querySelector(".market-change");
+
+            const drift = (Math.random() - 0.5) * (m.price * 0.0015);
+            m.price = Math.max(m.price + drift, 0.01);
+
+            priceEl.textContent = "$" + m.price.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            });
+
+            const jitter = (Math.random() - 0.5) * 0.5;
+            m.change = Math.max(Math.min(m.change + jitter, 6.0), -6.0);
+            const sign = m.change >= 0 ? "+" : "";
+            changeEl.textContent = sign + m.change.toFixed(2) + "%";
+            changeEl.classList.toggle("pos", m.change >= 0);
+            changeEl.classList.toggle("neg", m.change < 0);
+          }
+        }, 7000);
+      }
+
+      function initNotifications() {
+        notifBtn.addEventListener("click", () => {
+          notifOverlay.classList.toggle("hidden");
+          notifDot.classList.add("hidden");
+        });
+
+        notifOverlay.addEventListener("click", (e) => {
+          if (e.target === notifOverlay) {
+            notifOverlay.classList.add("hidden");
+          }
+        });
+
+        notifClear.addEventListener("click", () => {
+          notifList.innerHTML = "";
+          notifDot.classList.add("hidden");
+        });
+
+        // Seed a couple notifications
+        addNotification("NovaCore session started", "Device verified • iOS");
+        addNotification("API status nominal", "All clusters healthy • 99.997% uptime");
+      }
+
+      function initDebugTap() {
+        brandLogo.addEventListener("click", () => {
+          faceTapCount++;
+          if (faceTapTimer) clearTimeout(faceTapTimer);
+          faceTapTimer = setTimeout(() => {
+            faceTapCount = 0;
+          }, 2500);
+
+          if (faceTapCount >= 7) {
+            faceTapCount = 0;
+            alert("NovaCrypto Debug:\n\nThis interface is a parody / simulation.\nNo real banking, brokerage, or crypto systems are connected.\n\nUse it for fun, not for financial proof.");
+          }
+        });
+      }
+
+      // Loading logic
+      function beginLoadingSequence() {
+        authScreen.classList.add("hidden");
+        loadingScreen.classList.remove("hidden");
+
+        const steps = 100;
+        const stepTime = LOADING_DURATION / steps;
+        let progress = 0;
+        const metaMessages = [
+          "Syncing with NovaCore™ mainnet...",
+          "Verifying encryption keys...",
+          "Refreshing DeFi pool data...",
+          "Scanning for staking rewards...",
+          "Calibrating risk engine...",
+          "Finalizing yield projections..."
+        ];
+
+        const interval = setInterval(() => {
+          progress++;
+          if (progress > 100) progress = 100;
+          loadingBar.style.width = progress + "%";
+
+          const msgIndex = Math.min(
+            metaMessages.length - 1,
+            Math.floor((progress / 100) * metaMessages.length)
+          );
+          loadingMeta.textContent = metaMessages[msgIndex];
+
+          if (progress >= 100) {
+            clearInterval(interval);
+            loadingScreen.classList.add("hidden");
+            app.classList.remove("hidden");
+
+            loadBalance();
+            updateApiUI();
+            scheduleMetricsLoop();
+            initModalListeners();
+            initNav();
+            initTicker();
+            initMarkets();
+            initNotifications();
+            initDebugTap();
+
+            // Start random income + fee loops
+            scheduleNextIncome();
+            scheduleNextFee();
+
+            // Start logs seeding
+            for (let i = 0; i < 5; i++) {
+              pushLog(logLinesBase[randomInt(0, logLinesBase.length - 1)]);
+            }
+            setInterval(() => {
+              pushLog(logLinesBase[randomInt(0, logLinesBase.length - 1)]);
+            }, 6000);
+
+            // Slight jitter to NovaGuard score occasionally
+            setInterval(() => {
+              const jitter = randomInt(-1, 1);
+              novaguardScore = Math.max(92, Math.min(99, novaguardScore + jitter));
+              novaguardScoreEl.textContent = novaguardScore + " / 100";
+            }, 10000);
+          }
+        }, stepTime);
+      }
+
+      function initAuthScreen() {
+        function simulateAuth(type) {
+          authFaceBtn.disabled = true;
+          authPasscodeBtn.disabled = true;
+          showToast(type === "face" ? "Authenticating with Face ID..." : "Authenticating with passcode...");
+          setTimeout(() => {
+            beginLoadingSequence();
+          }, 900);
+        }
+
+        authFaceBtn.addEventListener("click", () => simulateAuth("face"));
+        authPasscodeBtn.addEventListener("click", () => simulateAuth("passcode"));
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        initAuthScreen();
+      });
+    })();
+  </script>
+</body>
+</html>
